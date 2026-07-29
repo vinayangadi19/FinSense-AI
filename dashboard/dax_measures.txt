@@ -1,0 +1,92 @@
+=========================================
+POWER BI DAX MEASURES: PERSONAL FINANCE
+=========================================
+
+1. Total Income
+------------------
+Total_Income = 
+CALCULATE(
+    SUM(fact_transactions[amount]),
+    fact_transactions[transaction_type] = "Income"
+)
+
+2. Total Expenses
+------------------
+Total_Expenses = 
+CALCULATE(
+    SUM(fact_transactions[amount]),
+    fact_transactions[transaction_type] = "Expense"
+)
+
+3. Net Savings
+------------------
+Net_Savings = [Total_Income] - [Total_Expenses]
+
+4. Savings Rate (%)
+------------------
+Savings_Rate = 
+DIVIDE(
+    [Net_Savings],
+    [Total_Income],
+    0
+) * 100
+
+5. Category Monthly Budget Limit
+------------------
+Budget_Limit = 
+SUM(fact_transactions[Budget_Limit])
+
+6. Budget Utilization (%)
+------------------
+Budget_Utilization = 
+DIVIDE(
+    [Total_Expenses],
+    [Budget_Limit],
+    0
+) * 100
+
+7. Budget Status Alert
+------------------
+Budget_Status = 
+IF(
+    [Budget_Utilization] > 100,
+    "⚠️ OVER BUDGET",
+    "✅ WITHIN BUDGET"
+)
+
+8. Rolling 3-Month Average Expenses
+------------------
+Rolling_3Month_Expense = 
+AVERAGEX(
+    DATESINPERIOD(
+        dim_dates[Date],
+        LASTDATE(dim_dates[Date]),
+        -3,
+        MONTH
+    ),
+    [Total_Expenses]
+)
+
+9. Month-Over-Month (MoM) Spending Growth (%)
+------------------
+MoM_Spending_Growth = 
+VAR PreviousMonthSpent = 
+    CALCULATE(
+        [Total_Expenses],
+        DATEADD(dim_dates[Date], -1, MONTH)
+    )
+RETURN
+    DIVIDE(
+        [Total_Expenses] - PreviousMonthSpent,
+        PreviousMonthSpent,
+        0
+    ) * 100
+
+10. Expense-to-Income Ratio (%)
+------------------
+Expense_to_Income_Ratio = 
+DIVIDE(
+    [Total_Expenses],
+    [Total_Income],
+    0
+) * 100
