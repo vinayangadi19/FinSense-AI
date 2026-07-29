@@ -83,7 +83,7 @@ def process_and_clean_data() -> pd.DataFrame:
     
     if outliers_to_cap > 0:
         df.loc[expenses_mask & (df["Amount"] > cap_value), "Amount"] = cap_value
-        logger.info(f"Capped {outliers_to_cap} expense values at the 99th percentile (${cap_value:.2f}).")
+        logger.info(f"Capped {outliers_to_cap} expense values at the 99th percentile (₹{cap_value:.2f}).")
         
     # Save cleaned file
     os.makedirs(os.path.dirname(settings.PROCESSED_DATA_PATH), exist_ok=True)

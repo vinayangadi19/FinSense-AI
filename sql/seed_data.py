@@ -22,6 +22,13 @@ def seed_database():
     df = pd.read_csv(settings.PROCESSED_DATA_PATH)
     
     # 1. Connect to DB and run schema DDL
+    if os.path.exists(settings.DATABASE_PATH):
+        try:
+            os.remove(settings.DATABASE_PATH)
+            logger.info("Removed existing database file to apply fresh schema.")
+        except Exception as e:
+            logger.warning(f"Could not remove database file: {e}")
+            
     conn = sqlite3.connect(settings.DATABASE_PATH)
     cursor = conn.cursor()
     
@@ -35,14 +42,36 @@ def seed_database():
     
     # 2. Seed dim_customer
     logger.info("Seeding dim_customer...")
-    customer_info = [
-        ("CUST-1001", "Alex Carter", "Premium"),
-        ("CUST-1002", "Jordan Smith", "Standard"),
-        ("CUST-1003", "Taylor Davis", "VIP")
-    ]
+    customer_info = []
+    segments = {
+        "CUST-1001": "Standard",
+        "CUST-1002": "Premium",
+        "CUST-1003": "VIP",
+        "CUST-1004": "VIP",
+        "CUST-1005": "Standard"
+    }
+    for cust_id, profile in settings.CUSTOMER_PROFILES.items():
+        customer_info.append((
+            cust_id,
+            profile["name"],
+            segments.get(cust_id, "Standard"),
+            profile["age"],
+            profile["occupation"],
+            profile["city"],
+            profile["monthly_income"],
+            profile["risk_profile"],
+            profile["savings_goal"],
+            profile["investment_style"],
+            profile["credit_score"],
+            profile["emergency_fund_goal"]
+        ))
     cursor.executemany("""
-        INSERT OR IGNORE INTO dim_customer (customer_id, customer_name, segment)
-        VALUES (?, ?, ?)
+        INSERT OR IGNORE INTO dim_customer (
+            customer_id, customer_name, segment, age, occupation, city,
+            monthly_income, risk_profile, savings_goal, investment_style,
+            credit_score, emergency_fund_goal
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, customer_info)
     conn.commit()
     
@@ -136,15 +165,29 @@ def seed_database():
         "Quarterly_Savings", "Budget_Utilization", "Rolling_7_Day_Average", "Rolling_30_Day_Average",
         "Moving_Average", "Emergency_Fund_Estimate", "Financial_Health_Score", "High_Spending_Flag",
         "Salary_Week_Indicator", "Holiday_Indicator", "Weekend_Indicator", "Recurring_Expense_Flag",
-        "Spending_Category_Score", "Spending_Velocity", "Anomaly_Flag"
+        "Spending_Category_Score", "Spending_Velocity", "Anomaly_Flag",
+        # New Indian Columns
+        "Cashflow_Trend", "Debt_to_Income_Ratio", "Investment_Ratio",
+        "UPI_Transaction_Ratio", "Lifestyle_Score", "Risk_Score", "Financial_Wellness_Score"
     ]
     
     # Casing mappings for SQL column insert matching DDL
     fact_df = df[fact_cols].copy()
-    fact_df = fact_df.rename(columns={"Time": "time", "Anomaly_Flag": "anomaly_flag"})
+    rename_dict = {
+        "Time": "time",
+        "Anomaly_Flag": "anomaly_flag",
+        "Cashflow_Trend": "cashflow_trend",
+        "Debt_to_Income_Ratio": "debt_to_income_ratio",
+        "Investment_Ratio": "investment_ratio",
+        "UPI_Transaction_Ratio": "upi_transaction_ratio",
+        "Lifestyle_Score": "lifestyle_score",
+        "Risk_Score": "risk_score",
+        "Financial_Wellness_Score": "financial_wellness_score"
+    }
+    fact_df = fact_df.rename(columns=rename_dict)
     
     # Correct columns names list
-    sql_cols = [c if c not in ["Time", "Anomaly_Flag"] else ("time" if c == "Time" else "anomaly_flag") for c in fact_cols]
+    sql_cols = [rename_dict.get(c, c.lower()) for c in fact_cols]
     
     # Clear facts
     cursor.execute("DELETE FROM fact_transactions")

@@ -146,13 +146,13 @@ def train_all_models():
         rmse = np.sqrt(mean_squared_error(y_test, y_pred))
         r2 = r2_score(y_test, y_pred)
         metrics[name] = {"MAE": mae, "RMSE": rmse, "R2": r2}
-        logger.info(f"{name} -> MAE: ${mae:.2f}, RMSE: ${rmse:.2f}, R2: {r2:.4f}")
+        logger.info(f"{name} -> MAE: ₹{mae:.2f}, RMSE: ₹{rmse:.2f}, R2: {r2:.4f}")
         
     # K-Fold Cross Validation on XGBoost
     kf = KFold(n_splits=5, shuffle=True, random_state=42)
     cv_scores = cross_val_score(xgbr, X_reg, y_reg, cv=kf, scoring="neg_mean_absolute_error")
     avg_cv_mae = -cv_scores.mean()
-    logger.info(f"XGBoost 5-Fold CV MAE: ${avg_cv_mae:.2f}")
+    logger.info(f"XGBoost 5-Fold CV MAE: ₹{avg_cv_mae:.2f}")
     
     # Feature Importances from Random Forest
     importances = rf.feature_importances_
@@ -172,10 +172,33 @@ def train_all_models():
     plt.close()
     logger.info(f"SHAP summary plot saved to {shap_img_path}")
     
-    # Save Models
+    # Save Models and Metadata
     joblib.dump(lr, os.path.join(settings.MODELS_DIR, "linear_regression_model.joblib"))
     joblib.dump(rf, os.path.join(settings.MODELS_DIR, "random_forest_model.joblib"))
     joblib.dump(xgbr, os.path.join(settings.MODELS_DIR, "xgboost_model.joblib"))
+    
+    # Metadata for dashboard
+    ml_metadata = {
+        "metrics": metrics,
+        "features": features,
+        "feature_importances": {
+            "Random Forest": feat_imp,
+            "XGBoost": {k: float(v) for k, v in zip(features, xgbr.feature_importances_)}
+        },
+        "test_actuals": y_test.tolist(),
+        "test_predictions": {
+            "XGBoost": xgbr.predict(X_test).tolist(),
+            "Linear Regression": lr.predict(X_test).tolist(),
+            "Random Forest": rf.predict(X_test).tolist()
+        },
+        "residuals": {
+            "XGBoost": (y_test - xgbr.predict(X_test)).tolist()
+        },
+        "avg_cv_mae": float(avg_cv_mae),
+        "residual_std": float(np.std(y_test - xgbr.predict(X_test)))
+    }
+    joblib.dump(ml_metadata, os.path.join(settings.MODELS_DIR, "ml_metadata.joblib"))
+    logger.info("ML metadata dictionary saved to models/ml_metadata.joblib")
     
     # -------------------------------------------------------------------------
     # 4. FORECASTING: Time Series (Prophet with SARIMAX Fallback)
@@ -222,11 +245,11 @@ We trained models to predict next month's total customer spending based on 3 mon
 ### Model Evaluation Results
 | Model Name | Mean Absolute Error (MAE) | Root Mean Squared Error (RMSE) | R-squared ($R^2$) |
 | :--- | :--- | :--- | :--- |
-| **Linear Regression** | ${metrics['Linear Regression']['MAE']:.2f} | ${metrics['Linear Regression']['RMSE']:.2f} | {metrics['Linear Regression']['R2']:.4f} |
-| **Random Forest** | ${metrics['Random Forest']['MAE']:.2f} | ${metrics['Random Forest']['RMSE']:.2f} | {metrics['Random Forest']['R2']:.4f} |
-| **XGBoost** | ${metrics['XGBoost']['MAE']:.2f} | ${metrics['XGBoost']['RMSE']:.2f} | {metrics['XGBoost']['R2']:.4f} |
+| **Linear Regression** | ₹{metrics['Linear Regression']['MAE']:.2f} | ₹{metrics['Linear Regression']['RMSE']:.2f} | {metrics['Linear Regression']['R2']:.4f} |
+| **Random Forest** | ₹{metrics['Random Forest']['MAE']:.2f} | ₹{metrics['Random Forest']['RMSE']:.2f} | {metrics['Random Forest']['R2']:.4f} |
+| **XGBoost** | ₹{metrics['XGBoost']['MAE']:.2f} | ₹{metrics['XGBoost']['RMSE']:.2f} | {metrics['XGBoost']['R2']:.4f} |
 
-*   **XGBoost 5-Fold CV MAE**: `${avg_cv_mae:.2f}`
+*   **XGBoost 5-Fold CV MAE**: `₹{avg_cv_mae:.2f}`
 
 ### Feature Importances (Random Forest)
 {chr(10).join([f"*   **{k}**: {v*100:.2f}%" for k, v in sorted(feat_imp.items(), key=lambda item: item[1], reverse=True)])}

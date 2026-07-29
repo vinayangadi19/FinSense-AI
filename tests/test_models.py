@@ -16,7 +16,8 @@ def test_models_exist():
         "kmeans_scaler.joblib",
         "iso_forest_model.joblib",
         "xgboost_model.joblib",
-        "sarimax_model.joblib"
+        "sarimax_model.joblib",
+        "ml_metadata.joblib"
     ]
     for m in model_files:
         path = os.path.join(settings.MODELS_DIR, m)

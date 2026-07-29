@@ -120,10 +120,10 @@ class DataValidator:
 | **Amount Integrity** | Positive non-zero numbers | {"✅ PASS" if stats['invalid_amounts'] == 0 else "❌ FAIL"} | {stats['invalid_amounts']} |
 | **Transaction Type** | 'Income' or 'Expense' only | {"✅ PASS" if stats['invalid_transaction_types'] == 0 else "❌ FAIL"} | {stats['invalid_transaction_types']} |
 | **Payment Mode Validation** | Aligns with settings list | {"✅ PASS" if stats['invalid_payment_modes'] == 0 else "⚠️ WARN"} | {stats['invalid_payment_modes']} |
-| **Currency Consistency** | USD only | {"✅ PASS" if stats['invalid_currency'] == 0 else "⚠️ WARN"} | {stats['invalid_currency']} |
+| **Currency Consistency** | INR only | {"✅ PASS" if stats['invalid_currency'] == 0 else "⚠️ WARN"} | {stats['invalid_currency']} |
 
 ## Statistical Outliers
-*   **Identified Expense Outliers**: `{stats['outliers_count']}` (Transactions exceeding IQR threshold of **${stats['outlier_threshold']:.2f}**)
+*   **Identified Expense Outliers**: `{stats['outliers_count']}` (Transactions exceeding IQR threshold of **₹{stats['outlier_threshold']:.2f}**)
 
 ---
 *Report generated programmatically by the Personal Finance Analytics pipeline.*

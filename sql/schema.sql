@@ -5,7 +5,16 @@ PRAGMA foreign_keys = ON;
 CREATE TABLE IF NOT EXISTS dim_customer (
     customer_id TEXT PRIMARY KEY,
     customer_name TEXT NOT NULL,
-    segment TEXT NOT NULL DEFAULT 'Standard'
+    segment TEXT NOT NULL DEFAULT 'Standard',
+    age INTEGER,
+    occupation TEXT,
+    city TEXT,
+    monthly_income REAL,
+    risk_profile TEXT,
+    savings_goal TEXT,
+    investment_style TEXT,
+    credit_score INTEGER,
+    emergency_fund_goal REAL
 );
 
 -- 2. Dimension Table: Date
@@ -36,7 +45,7 @@ CREATE TABLE IF NOT EXISTS dim_payment (
     payment_id INTEGER PRIMARY KEY AUTOINCREMENT,
     payment_mode TEXT NOT NULL,
     account_type TEXT NOT NULL,
-    currency TEXT NOT NULL DEFAULT 'USD',
+    currency TEXT NOT NULL DEFAULT 'INR',
     UNIQUE(payment_mode, account_type, currency)
 );
 
@@ -102,6 +111,15 @@ CREATE TABLE IF NOT EXISTS fact_transactions (
     spending_category_score REAL,
     spending_velocity REAL,
     anomaly_flag TEXT CHECK(anomaly_flag IN ('Yes', 'No')) NOT NULL DEFAULT 'No',
+    
+    -- New Indian Features
+    cashflow_trend REAL,
+    debt_to_income_ratio REAL,
+    investment_ratio REAL,
+    upi_transaction_ratio REAL,
+    lifestyle_score REAL,
+    risk_score INTEGER,
+    financial_wellness_score INTEGER,
     
     FOREIGN KEY (customer_id) REFERENCES dim_customer(customer_id),
     FOREIGN KEY (date) REFERENCES dim_date(date),
