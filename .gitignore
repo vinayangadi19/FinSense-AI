@@ -33,16 +33,16 @@ env/
 ENV/
 
 # Data and Databases
-data/raw/*.csv
-data/processed/*.csv
-*.db
-*.sqlite
+# data/raw/*.csv
+# data/processed/*.csv
+# *.db
+# *.sqlite
 
 # Machine Learning Models
-models/
-*.pkl
-*.joblib
-*.gbtree
+# models/
+# *.pkl
+# *.joblib
+# *.gbtree
 
 # IDEs and Editors
 .vscode/
